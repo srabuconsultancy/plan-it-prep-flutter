@@ -1,0 +1,81 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Life Lite</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>dietcian_app</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>com.googleusercontent.apps.968524122508-psip8imc2dcutlq2ei9vvnlggdjgmuq4</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>GIDClientID</key>
+	<string>968524122508-psip8imc2dcutlq2ei9vvnlggdjgmuq4.apps.googleusercontent.com</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Allow to access Apple Music Library, this is not required by the app but required by the Appstore connect review team.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Allow to access your phone's calendar, this is not required by the app but required by the Appstore connect review team.</string>
+	<key>NSCameraUsageDescription</key>
+	<string>Life Lite App requires the access to your camera to let you add pictures and videos to post to your Social Profile</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Allow to access your phone's contacts, this is not required by the app but required by the Appstore connect review team.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Allow to access user location, this is not required by the app but required by the Appstore connect review team.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Allow to access user location, this is not required by the app but required by the Appstore connect review team.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Life Lite App requires the access to your camera's microphone to let you videos to post to your Social Profile</string>
+	<key>NSMotionUsageDescription</key>
+	<string>Allow to access motion usage information, this is not required by the app but required by the Appstore connect review team.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Life Lite App needs to access your camera roll so that you can upload images for your profile picture and upload video to your social media profile. Your images and videos will not be shared without your permission</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Allow to use speech recognition, this is not required by the app but required by the Appstore connect review team.</string>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+	</array>
+</dict>
+</plist>

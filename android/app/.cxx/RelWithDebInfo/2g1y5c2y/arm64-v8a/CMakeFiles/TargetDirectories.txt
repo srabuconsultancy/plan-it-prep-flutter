@@ -1,0 +1,2 @@
+D:/flutterProjects/dietitian_app/android/app/.cxx/RelWithDebInfo/2g1y5c2y/arm64-v8a/CMakeFiles/edit_cache.dir
+D:/flutterProjects/dietitian_app/android/app/.cxx/RelWithDebInfo/2g1y5c2y/arm64-v8a/CMakeFiles/rebuild_cache.dir

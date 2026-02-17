@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "18038826346",
+    "project_id": "plan-it-prep",
+    "storage_bucket": "plan-it-prep.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:18038826346:android:25a25083108ab0fafaf113",
+        "android_client_info": {
+          "package_name": "com.planit.prep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "18038826346-hii4vg9poeiu6lhqogb5go7eep4qa4g0.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.planit.prep",
+            "certificate_hash": "278b8c445e9d35201aa220e6abe910cdd0bd60b9"
+          }
+        },
+        {
+          "client_id": "18038826346-gnisbaun62jt1qoiqprt5dqh8tjbf3on.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBR3PPztQS-a6UAFOnCFwsN79GfeonFcyo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "18038826346-gnisbaun62jt1qoiqprt5dqh8tjbf3on.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

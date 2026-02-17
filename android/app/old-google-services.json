@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "713974924828",
+    "project_id": "planitprep-26a3e",
+    "storage_bucket": "planitprep-26a3e.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:713974924828:android:59be7d670aaef4f3ec81d9",
+        "android_client_info": {
+          "package_name": "com.planit.prep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "713974924828-b12j7s3lp7hcflfqbagfikn2sdf2es8j.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.planit.prep",
+            "certificate_hash": "470cde34728ed7eef02268822b1b9b0b44537069"
+          }
+        },
+        {
+          "client_id": "713974924828-n8iemrhhm8vujnrnhpgevs1h3bieml5p.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBl81-yC3cilec0xhGsZU6FN_MrROecwao"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "713974924828-n8iemrhhm8vujnrnhpgevs1h3bieml5p.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

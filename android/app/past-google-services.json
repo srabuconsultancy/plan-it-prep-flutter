@@ -1,0 +1,38 @@
+{
+  "project_info": {
+    "project_number": "219966244669",
+    "project_id": "planit-c8791",
+    "storage_bucket": "planit-c8791.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:219966244669:android:724a58496348fc610c6754",
+        "android_client_info": {
+          "package_name": "com.planit.prep"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "219966244669-bs5i7r32s7tlgrdelcm2pvv1vdgpnc93.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.planit.prep",
+            "certificate_hash": "1288fab0ef4eb66beffd729283b87588989b8b51"
+          }
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAi9-l0aTB9U9thtWLiS8jPWsoyTT0EP2g"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
