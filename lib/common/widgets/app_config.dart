@@ -1,6 +1,6 @@
 String appName = "Planit";
 String baseUrl = "https://planitprep.cloud/";
-//String baseUrl = "http://10.169.136.174:8000/";
+//String baseUrl = "http://10.169.136.78:8000/";
 String pusherKey = "70c0e9ffcfcdb21f09a5";
 String pusherAppCluster = "us2";
 String apiUser = "DietitianApi";

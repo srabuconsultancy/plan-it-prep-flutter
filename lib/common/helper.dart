@@ -727,6 +727,18 @@ class Helper {
     }
   }
 
+
+  static Future<void> openCheckout(String url) async {
+  final Uri uri = Uri.parse(url);
+
+  if (await canLaunchUrl(uri)) {
+    await launchUrl(
+      uri,
+      mode: LaunchMode.inAppWebView, // in-app browser
+    );
+  }
+}
+
   static void dismissToast() {
     toastification.dismissAll();
   }

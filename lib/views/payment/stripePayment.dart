@@ -7,10 +7,11 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:http/http.dart' as http;
 import 'package:get/get.dart';
 import 'package:nutri_ai/services/user_service.dart';
+import 'package:nutri_ai/views/payment/stripesdkpay.dart';
 import '../../common/widgets/app_config.dart';
 import '../../common/helper.dart';
 import '../../core.dart';
-
+import '../services/payment_service.dart';
 /* =========================================================
     PAYMENT INTENT FUNCTIONS (Unchanged Functionality)
 ========================================================= */
@@ -18,6 +19,7 @@ import '../../core.dart';
 Future<String> createPaymentIntent(int amount) async {
   final url = Uri.parse('${baseUrl}api/v1/create-payment-intent');
   final token = UserService.to.currentUser.value.accessToken;
+
   final response = await http.post(
     url,
     headers: {
@@ -55,6 +57,65 @@ Future<void> payWithStripe(int amount) async {
   }
 }
 
+//done actual payment funtion
+Future<int> makePayment(String priceId) async {
+  try {
+    final response = await Helper.sendRequestToServer(
+      endPoint: 'create-subscription',
+      method: 'post',
+      requestData: {
+        "price_id": priceId,
+      },
+    );
+
+    debugPrint(response.body);
+
+    final json = jsonDecode(response.body);
+    final clientSecret = json['client_secret'];
+
+    await Stripe.instance.initPaymentSheet(
+      paymentSheetParameters: SetupPaymentSheetParameters(
+        paymentIntentClientSecret: clientSecret,
+        merchantDisplayName: "Your App Name",
+        style: ThemeMode.light,
+      ),
+    );
+
+    await Stripe.instance.presentPaymentSheet();
+
+    print("Payment Successful");
+    return 1; // Payment success
+  } catch (e) {
+    print("Payment Failed: $e");
+    return 0; // Payment failed
+  }
+}
+
+
+
+Future<void> _verifyPayment(String? sessionId) async {
+  if (sessionId == null) return;
+
+  final url = Uri.parse('${baseUrl}api/v1/verify-payment');
+  final token = UserService.to.currentUser.value.accessToken;
+
+  final response = await http.post(
+    url,
+    headers: {
+      'Content-Type': 'application/json; charset=UTF-8',
+      'Accept': 'application/json',
+      'USER': apiUser,
+      'KEY': apiKey,
+      'Authorization': 'Bearer $token',
+    },
+    body: jsonEncode({"session_id": sessionId}),
+  );
+
+  if (response.statusCode == 200) {
+    print("Subscription Activated");
+  }
+}
+
 Future<void> getSubsription(String priceId) async {
   final url = Uri.parse('${baseUrl}api/v1/create-subscription');
   final token = UserService.to.currentUser.value.accessToken;
@@ -74,7 +135,7 @@ Future<void> getSubsription(String priceId) async {
   if (response.statusCode == 200) {
     final data = jsonDecode(response.body);
     final String checkoutUrl = data['checkout_url'];
-    Helper.launchLinkedURL(checkoutUrl);
+    Helper.openCheckout(checkoutUrl);
   } else {
     throw Exception('Failed to create subscription');
   }
@@ -102,6 +163,36 @@ Future<http.Response> getPlans() async {
   }
 }
 
+// --- NEW: Check Premium API Function ---
+Future<int> checkPremium(String priceId) async {
+  final url = Uri.parse('${baseUrl}api/v1/checkSubscription');
+  final token = UserService.to.currentUser.value.accessToken;
+  final int userId = UserService.to.currentUser.value.id;
+
+  try {
+    final response = await http.post(
+      url,
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json',
+        'USER': apiUser,
+        'KEY': apiKey,
+        'Authorization': 'Bearer $token',
+      },
+      body: jsonEncode({'price_id': priceId, 'user_id': userId}),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return data['is_subscribed'] ?? 0;
+    }
+    return 0;
+  } catch (e) {
+    debugPrint("Check Premium Error: $e");
+    return 0;
+  }
+}
+
 /* =========================================================
     STRIPE PAYMENT PAGE (Modern Material Design)
 ========================================================= */
@@ -117,6 +208,7 @@ class _StripePaymentPageState extends State<StripePaymentPage> {
   bool _isLoading = false;
   bool _hasError = false;
   List<Map<String, dynamic>> subscriptionPlans = [];
+  int is_premium = 0;
 
   @override
   void initState() {
@@ -134,10 +226,21 @@ class _StripePaymentPageState extends State<StripePaymentPage> {
       if (response.statusCode == 200) {
         final Map<String, dynamic> decodedData = jsonDecode(response.body);
         if (decodedData['status'] == true) {
+          final List<Map<String, dynamic>> plans =
+              List<Map<String, dynamic>>.from(decodedData['data']);
+
           setState(() {
-            subscriptionPlans =
-                List<Map<String, dynamic>>.from(decodedData['data']);
+            subscriptionPlans = plans;
           });
+
+          // If plans exist, take the first price_id to check subscription status
+          if (plans.isNotEmpty) {
+            String priceId = plans[0]['price_id'];
+            int premiumStatus = await checkPremium(priceId);
+            setState(() {
+              is_premium = premiumStatus;
+            });
+          }
         }
       } else {
         setState(() => _hasError = true);
@@ -153,7 +256,8 @@ class _StripePaymentPageState extends State<StripePaymentPage> {
   Future<void> _handleSubscription(String priceId) async {
     setState(() => _isLoading = true);
     try {
-      await getSubsription(priceId);
+      int val = await makePayment(priceId);
+      if (val == 1) await _fetchPlans();
     } catch (e) {
       Get.snackbar("Error", e.toString(), snackPosition: SnackPosition.BOTTOM);
     } finally {
@@ -197,33 +301,40 @@ class _StripePaymentPageState extends State<StripePaymentPage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      Text(
-                        'Upgrade Your Plan',
-                        style: TextStyle(
-                          fontSize: 28,
-                          fontWeight: FontWeight.w900,
-                          color: glShadeColor,
-                          letterSpacing: -0.5,
-                        ),
-                      )
-                          .animate()
-                          .fadeIn(duration: 400.ms)
-                          .slideX(begin: -0.1, end: 0),
-                      const SizedBox(height: 8),
-                      Text(
-                        'Select a subscription that suits you best to unlock all features.',
-                        style: TextStyle(
-                          color: glShadeColor.withOpacity(0.6),
-                          fontSize: 15,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ).animate().fadeIn(delay: 100.ms),
+                      if (is_premium == 1)
+                        _buildPremiumMemberHeader()
+                      else ...[
+                        Text(
+                          'Upgrade Your Plan',
+                          style: TextStyle(
+                            fontSize: 28,
+                            fontWeight: FontWeight.w900,
+                            color: glShadeColor,
+                            letterSpacing: -0.5,
+                          ),
+                        )
+                            .animate()
+                            .fadeIn(duration: 400.ms)
+                            .slideX(begin: -0.1, end: 0),
+                        const SizedBox(height: 8),
+                        Text(
+                          'Select a subscription that suits you best to unlock all features.',
+                          style: TextStyle(
+                            color: glShadeColor.withOpacity(0.6),
+                            fontSize: 15,
+                            fontWeight: FontWeight.w500,
+                          ),
+                        ).animate().fadeIn(delay: 100.ms),
+                      ],
                       const SizedBox(height: 30),
-                      ...subscriptionPlans
-                          .map((plan) => _subscriptionCard(plan))
-                          .toList(),
+                      if (is_premium == 0)
+                        ...subscriptionPlans
+                            .map((plan) => _subscriptionCard(plan))
+                            .toList()
+                      else
+                        _buildActivePremiumFeatures(),
                       const SizedBox(height: 20),
-                      _buildSecurePaymentNote(),
+                      if (is_premium == 0) _buildSecurePaymentNote(),
                       const SizedBox(height: 40),
                     ],
                   ),
@@ -240,6 +351,112 @@ class _StripePaymentPageState extends State<StripePaymentPage> {
           ),
       ],
     );
+  }
+
+  Widget _buildPremiumMemberHeader() {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [glLightThemeColor, glLightThemeColor.withOpacity(0.8)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(25),
+        boxShadow: [
+          BoxShadow(
+            color: glLightThemeColor.withOpacity(0.3),
+            blurRadius: 20,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const Icon(TablerIcons.crown, color: Colors.white, size: 48),
+          const SizedBox(height: 12),
+          const Text(
+            'YOU ARE A PREMIUM MEMBER',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 18,
+              fontWeight: FontWeight.w900,
+              letterSpacing: 1,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Enjoy unlimited access to all features',
+            style: TextStyle(
+              color: Colors.white.withOpacity(0.9),
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
+    ).animate().scale(duration: 400.ms, curve: Curves.easeOutBack);
+  }
+
+  Widget _buildActivePremiumFeatures() {
+    // Take features from the plan data fetched or use fallback
+    final List<dynamic> features = (subscriptionPlans.isNotEmpty &&
+            subscriptionPlans[0]['features'] != null)
+        ? subscriptionPlans[0]['features']
+        : [
+            'Full AI Consultation',
+            'Personalized Meal Plans',
+            '24/7 Priority Support',
+            'Ad-free Experience'
+          ];
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          'Your Unlocked Features',
+          style: TextStyle(
+            fontSize: 20,
+            fontWeight: FontWeight.w800,
+            color: glShadeColor,
+          ),
+        ),
+        const SizedBox(height: 20),
+        ...features
+            .map((feature) => Container(
+                  margin: const EdgeInsets.only(bottom: 15),
+                  padding: const EdgeInsets.all(16),
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(15),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(0.02),
+                        blurRadius: 10,
+                      )
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(TablerIcons.circle_check_filled,
+                          color: Colors.green, size: 22),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          feature.toString(),
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w600,
+                            color: glShadeColor,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ))
+            .toList(),
+      ],
+    ).animate().fadeIn(delay: 300.ms);
   }
 
   Widget _buildErrorState() {
@@ -388,6 +605,8 @@ class _StripePaymentPageState extends State<StripePaymentPage> {
                         ),
                       ))
                   .toList(),
+
+     
           ],
         ),
       )

@@ -6,6 +6,7 @@ import 'package:get_storage/get_storage.dart'; // Import GetStorage
 import 'package:intl/intl.dart'; // Import for DateFormat
 import 'package:nutri_ai/controllers/surpriseMealController.dart';
 import 'package:nutri_ai/views/dashboard/surPriseMeal2.dart';
+import 'package:nutri_ai/views/payment/stripePayment.dart';
 // Note: SfCircularChart is not used in this file, so import is removed.
 
 import '../../controllers/calendar_controller.dart';
@@ -99,6 +100,7 @@ class Home extends GetView<CalendarController> {
                           ),
                           Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
                                 "Welcome",
@@ -117,19 +119,37 @@ class Home extends GetView<CalendarController> {
                         ],
                       ),
                     ),
-                    IconButton(
-                      onPressed: () {
-                        Get.toNamed(Routes.notifications);
-                      },
-                      icon: SvgPicture.asset(
-                        "assets/icons/notifications.svg",
-                        width: 25,
-                        height: 25,
-                        fit: BoxFit.fitHeight,
-                        colorFilter: ColorFilter.mode(
-                            glLightBoxShadowColor.withValues(alpha: 0.6),
-                            BlendMode.srcIn),
-                      ),
+                    // --- Grouped Icons Section (Deepened for Clarity) ---
+                    Row(
+                      children: [
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            Get.toNamed(Routes.notifications);
+                          },
+                          icon: SvgPicture.asset(
+                            "assets/icons/notifications.svg",
+                            width: 25,
+                            height: 25,
+                            fit: BoxFit.fitHeight,
+                            // Removed alpha/transparency for a deeper, clearer look
+                            colorFilter: const ColorFilter.mode(
+                                Colors.black87, BlendMode.srcIn),
+                          ),
+                        ),
+                        IconButton(
+                          visualDensity: VisualDensity.compact,
+                          onPressed: () {
+                            Get.toNamed('/favouriteMealPage');
+                          },
+                          icon: const Icon(
+                            Icons.favorite_border,
+                            size: 25,
+                            // Using a solid deep color for high visibility
+                            color: Colors.black87,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ).marginSymmetric(horizontal: 15),
@@ -384,6 +404,7 @@ class Home extends GetView<CalendarController> {
     return Obx(() {
       final isExpanded =
           controller.expansionState[recipeData.uniqueKey] ?? false;
+
       return Card(
         color: Colors.white,
         margin: const EdgeInsets.all(16),
@@ -485,6 +506,79 @@ class Home extends GetView<CalendarController> {
                       ),
                     ],
                   ),
+                ),
+// --- PROFESSIONAL SOLID HEART BUTTON ---
+                Positioned(
+                  bottom: 10,
+                  right: 12,
+                  child: Obx(() {
+                    final int mealEnum = controller.getMealEnum(mealName);
+                    final bool active =
+                        controller.favouriteTypeSet.contains(mealEnum);
+
+                    return GestureDetector(
+                      onTap: () async {
+                        //  INSTANT UI UPDATE (Optimistic)
+                        if (active) {
+                          controller.favouriteTypeSet.remove(mealEnum);
+                        } else {
+                          controller.favouriteTypeSet.add(mealEnum);
+                        }
+
+                        // CALL API
+                        bool success;
+
+                        if (active) {
+                          success =
+                              await controller.removeFromFavouriteOptimistic(
+                                  "diet_plan", mealName, mealEnum);
+                        } else {
+                          success = await controller.addToFavouriteOptimistic(
+                              "diet_plan", mealName, mealEnum);
+                        }
+
+                        // REVERT IF FAILED
+                        if (!success) {
+                          if (active) {
+                            controller.favouriteTypeSet.add(mealEnum);
+                          } else {
+                            controller.favouriteTypeSet.remove(mealEnum);
+                          }
+
+                          Get.snackbar("Error", "Failed to update favourite");
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: active
+                                  ? Colors.red.withOpacity(0.35)
+                                  : Colors.black.withOpacity(0.1),
+                              blurRadius: active ? 12 : 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: AnimatedScale(
+                          scale: active ? 1.15 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutBack,
+                          child: Icon(
+                            active ? Icons.favorite : Icons.favorite_border,
+                            color: active
+                                ? const Color(0xFFE91E63)
+                                : const Color(0xFF9E9E9E),
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
                 ),
                 Positioned(
                   top: 0,

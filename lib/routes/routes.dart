@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:nutri_ai/views/dashboard/surPriseMeal2.dart';
 import 'package:nutri_ai/views/dashboard/surpriseMeal.dart';
+import 'package:nutri_ai/views/meal/favouriteMeal.dart';
 import 'package:nutri_ai/views/payment/stripePayment.dart';
 import 'package:nutri_ai/views/payment/payment_details_page.dart';
 import 'package:nutri_ai/views/payment/payment_history_page.dart';
@@ -127,6 +128,11 @@ class AppPages {
       page: () => const SurpriseMeal(),
       // Optional: Add a transition
     ),
+    GetPage(
+      name: Routes.favouriteMealPage,
+      page: () => FavouriteMealPage(),
+      participatesInRootNavigator: true,
+    ),
   ];
 }
 
@@ -162,6 +168,7 @@ abstract class Routes {
   static const stripePayment = _Paths.stripePayment;
   static const stripePaymentHistory = _Paths.stripePaymentHistory;
   static const stripePaymentDetails = _Paths.stripePaymentDetails;
+  static const favouriteMealPage = _Paths.favouriteMealPage;
 
   Routes._();
 }
@@ -194,4 +201,5 @@ abstract class _Paths {
   static const stripePayment = '/payment';
   static const stripePaymentHistory = '/stripePaymentHistory';
   static const stripePaymentDetails = '/stripePaymentDetails';
+  static const favouriteMealPage = '/favouriteMealPage';
 }
