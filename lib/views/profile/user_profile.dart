@@ -371,7 +371,7 @@ class UserProfile extends GetView<PackageController> {
 
                 _buildListTile(
                   icon: TablerIcons.receipt,
-                  title: "Payment",
+                  title: "Subscription",
                   onTap: () async {
                     Get.toNamed(Routes.stripePayment);
                   },

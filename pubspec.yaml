@@ -86,7 +86,9 @@ dependencies:
   flutter_secure_storage: ^9.2.4
   syncfusion_flutter_gauges: ^30.1.38
   country_picker: ^2.0.27
-  flutter_stripe: ^12.1.1
+  flutter_stripe: ^12.3.0
+  webview_flutter: ^4.13.1
+  app_links: ^3.5.0
 
 
 dev_dependencies:

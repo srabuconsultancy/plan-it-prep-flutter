@@ -673,6 +673,7 @@ class UserController extends GetxController {
     }
     inRegisterProcess.value = true;
     _showToast("Please wait.");
+    
     final userProfile = _buildUserProfile();
     final files = await _prepareFiles(userProfile);
     try {
@@ -682,12 +683,13 @@ class UserController extends GetxController {
       dynamic value =
           files.isEmpty ? apiResponse.body : json.encode(apiResponse.data);
       if (value == null) {
-        //print("API response is null");
+        print("API response is null");
         return;
       }
+      debugPrint("helooooo");
       await _handleRegisterResponse(json.decode(value));
     } catch (e) {
-      //print("Exception during register: $e\n");
+      print("Exception during register: $e\n");
     } finally {
       inRegisterProcess.value = false;
     }

@@ -26,7 +26,8 @@ Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
   // Set your stripe publishable key
-  Stripe.publishableKey = 'pk_test_51SBCMIBoy1so7bjrejudVy4BMKZieVFBwxUoZNm78hi2ea7fI53mTEpMgsTmszQ4ufvNruKabXCp9k2dQ70CgcV400ryVrNhx8';
+  Stripe.publishableKey =
+      'pk_test_51SBCMIBoy1so7bjrejudVy4BMKZieVFBwxUoZNm78hi2ea7fI53mTEpMgsTmszQ4ufvNruKabXCp9k2dQ70CgcV400ryVrNhx8';
   await Stripe.instance.applySettings();
 
   await Firebase.initializeApp();
@@ -40,7 +41,8 @@ Future<void> main() async {
   // --- Define Firebase Options ---
   // Moved definition here to be available for both initServices and background handler
   firebaseOptions = FirebaseOptions(
-    apiKey: "AIzaSyC8J3cSINZ5nWhbkQXV4u7VsOKmdoSgHTg", // Replace with your actual key if needed
+    apiKey:
+        "AIzaSyC8J3cSINZ5nWhbkQXV4u7VsOKmdoSgHTg", // Replace with your actual key if needed
     appId: Platform.isAndroid
         ? "1:968524122508:android:f5c9525587fcc377e86ea9" // Replace with your actual App ID
         : "1:968524122508:ios:7f81065c271ba05ce86ea9", // Replace with your actual App ID
@@ -61,7 +63,8 @@ Future<void> main() async {
 }
 
 // --- Background Message Handler ---
-@pragma('vm:entry-point') // Ensure this annotation is present for background execution
+@pragma(
+    'vm:entry-point') // Ensure this annotation is present for background execution
 Future<void> _firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   // --- Initialize Firebase for the background isolate (using default instance) ---
   // IMPORTANT: Ensure firebaseOptions is accessible here
@@ -118,7 +121,8 @@ void showFlutterNotification(RemoteMessage message) {
           channel.id,
           channel.name,
           channelDescription: channel.description,
-          icon: 'launch_background', // Ensure 'launch_background.png' (or .xml) exists in android/app/src/main/res/drawable
+          icon:
+              'launch_background', // Ensure 'launch_background.png' (or .xml) exists in android/app/src/main/res/drawable
         ),
       ),
     );
@@ -169,8 +173,8 @@ void configLoading() {
       height: (Get.width ?? 300) / 4.5, // Added null check for Get.width
       // Use a background color that contrasts if loader is hard to see
       decoration: BoxDecoration(
-         color: Colors.black.withOpacity(0.1), // Example background
-         borderRadius: BorderRadius.circular(10),
+        color: Colors.black.withOpacity(0.1), // Example background
+        borderRadius: BorderRadius.circular(10),
       ),
       padding: const EdgeInsets.all(8.0),
       child: Lottie.asset(
@@ -179,11 +183,11 @@ void configLoading() {
     ) //.cornerRadius(10) // .cornerRadius seems specific to a package like velocity_x, using BoxDecoration instead
     ..maskType = EasyLoadingMaskType.none
     ..maskColor = Colors.transparent
-    ..userInteractions = true // Be cautious with 'true', might block interaction needed during loading
+    ..userInteractions =
+        true // Be cautious with 'true', might block interaction needed during loading
     ..dismissOnTap = false
     ..boxShadow = <BoxShadow>[];
 }
-
 
 // --- Main App Widget (Stateful) ---
 class MyApp extends StatefulWidget {
@@ -206,26 +210,42 @@ class _MyAppState extends State<MyApp> {
   void initState() {
     super.initState();
     initialize();
+    _initDeepLinks();
+  }
+
+  void _initDeepLinks() async {
+    await DeepLinkService().init();
+  }
+
+
+
+
+  @override
+  void dispose() {
+    DeepLinkService().dispose();
+    super.dispose();
   }
 
   // --- Initialization logic (Correct) ---
   initialize() async {
-      try {
-    await rootController.getAppConfig();
-    initialRoute = await authController.checkIfAuthenticated();
-  } catch (e, s) {
-    // Log the error for debugging
-    print("Initialization error: $e");
-    print(s);
-    initialRoute = Routes.register; // fallback route
-  } finally {
-    if (mounted) {
-      setState(() {
-        _isLoading = false;
-      });
+    try {
+      await rootController.getAppConfig();
+      initialRoute = await authController.checkIfAuthenticated();
+    } catch (e, s) {
+      // Log the error for debugging
+      print("Initialization error: $e");
+      print(s);
+      initialRoute = Routes.register; // fallback route
+    } finally {
+      if (mounted) {
+        setState(() {
+          _isLoading = false;
+        });
+      }
     }
   }
-  }
+
+
 
   @override
   Widget build(BuildContext context) {

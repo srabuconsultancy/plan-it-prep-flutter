@@ -11,11 +11,25 @@ class SurpriseMealController extends GetxController {
   // Holds the single surprise meal data
   final Rx<RecipeCardData?> surpriseMeal = Rx<RecipeCardData?>(null);
 
+  final CalendarController calController = Get.find<CalendarController>();
+
   // Holds the ingredients for the surprise meal
   final RxList<GroceryItem> surpriseIngredients = <GroceryItem>[].obs;
 
   // Expansion state for the surprise card
   final RxBool isCardExpanded = false.obs;
+
+  @override
+  void onInit() {
+    super.onInit();
+
+    fetchInitialData();
+  }
+
+  Future<void> fetchInitialData() async {
+    calController.isSMFavourite.value =
+        await calController.checkSM_IsFavourite();
+  }
 
   void toggleExpansion() {
     isCardExpanded.value = !isCardExpanded.value;
@@ -23,17 +37,14 @@ class SurpriseMealController extends GetxController {
 
   // --- MODIFIED: Removed BuildContext. No UI logic here. ---
   Future<void> fetchSurpriseMeal({bool isRefresh = false}) async {
-    //we can pass isrefresh true when we need to refresh the surprise meal 
     try {
       isLoading.value = true;
+      calController.isSMFavourite.value = false;
       surpriseMeal.value = null;
       surpriseIngredients.clear();
       isCardExpanded.value = false;
 
-      //final int userId = UserService.to.currentUser.value.id;
-
       final user = UserService.to.currentUser.value;
-      debugPrint("Current User: ${user.id}");
       if (user == null) {
         Get.snackbar(
           "Session Error",
@@ -45,19 +56,18 @@ class SurpriseMealController extends GetxController {
 
       final int userId = user.id;
 
-      // --- FIX: Send full timestamp (HH:mm:ss) so the server treats it as a NEW request ---
-      // Previous: DateFormat('yyyy-MM-dd') -> "2023-10-27" (Same all day)
-      // New: DateFormat('yyyy-MM-dd HH:mm:ss') -> "2023-10-27 14:30:05" (Unique every tap)
       final String date =
           DateFormat('yyyy-MM-dd HH:mm:ss').format(DateTime.now());
 
       final response = await Helper.sendRequestToServer(
-        endPoint: 'get-surprise-meal',
+        endPoint: 'get-user-meal',
         method: 'post',
         requestData: {
           'user_id': userId,
           'day': 1,
           'date': date,
+          'type': "surprise_meal",
+          'prep_type': "DAY_WISE_MEAL",
           'isrefresh': isRefresh ? 1 : 0,
         },
       );
@@ -67,27 +77,32 @@ class SurpriseMealController extends GetxController {
 
         if (response.statusCode == 200 && responseData['status'] == true) {
           final Map<String, dynamic>? outerData = responseData['data'];
-          final Map<String, dynamic>? innerData = outerData?['data'];
-          final List<dynamic> dietPlan = innerData?['diet_plan'] ?? [];
+          final List<dynamic> dietPlan = outerData?['diet_plan'] ?? [];
 
           if (dietPlan.isNotEmpty) {
             final Map<String, dynamic> planData = dietPlan[0];
 
-            // 1. Parse Meal
             if (planData['meals'] != null && planData['meals'] is Map) {
               final Map<String, dynamic> mealsMap = planData['meals'];
+
               if (mealsMap.isNotEmpty) {
                 String key = mealsMap.keys.first;
-                surpriseMeal.value =
-                    RecipeCardData.fromMealEntry(key, mealsMap[key]);
-              }
-            }
+                final Map<String, dynamic> mealData = mealsMap[key];
 
-            // 2. Parse Ingredients
-            if (planData['grocery_list'] != null) {
-              final List<dynamic> gl = planData['grocery_list'];
-              for (var item in gl) {
-                surpriseIngredients.add(GroceryItem.fromJson(item));
+                // 1. Parse Meal
+                surpriseMeal.value =
+                    RecipeCardData.fromMealEntry(key, mealData);
+
+               
+
+                // 2. Parse Ingredients (Nested inside the meal object per your JSON)
+                if (mealData['grocery_list'] != null &&
+                    mealData['grocery_list'] is List) {
+                  final List<dynamic> gl = mealData['grocery_list'];
+                  for (var item in gl) {
+                    surpriseIngredients.add(GroceryItem.fromJson(item));
+                  }
+                }
               }
             }
           } else {
@@ -100,6 +115,9 @@ class SurpriseMealController extends GetxController {
       } else {
         throw Exception("No response from server.");
       }
+
+       bool favStatus = await calController.checkSM_IsFavourite();
+       calController.isSMFavourite.value = favStatus;
     } catch (e) {
       Get.snackbar(
         "Error",

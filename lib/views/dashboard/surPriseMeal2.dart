@@ -4,12 +4,23 @@ import 'package:flutter_svg/flutter_svg.dart';
 import 'package:nutri_ai/controllers/surpriseMealController.dart';
 import 'package:velocity_x/velocity_x.dart';
 import '../../../core.dart';
+import 'package:flutter_animate/flutter_animate.dart';
+import '../../controllers/calendar_controller.dart';
+import 'package:flutter/services.dart';
+
+import 'package:intl/intl.dart'; // Import for DateFormat
+
+import '../../core.dart';
 
 class SurpriseMeal extends GetView<SurpriseMealController> {
   const SurpriseMeal({super.key});
 
   @override
   Widget build(BuildContext context) {
+    // Put SurpriseMealController
+    final SurpriseMealController surpriseController =
+        Get.put(SurpriseMealController());
+
     // --- MODIFIED: Converted to a normal Scaffold Page ---
     return Scaffold(
       backgroundColor: Colors.white,
@@ -20,17 +31,17 @@ class SurpriseMeal extends GetView<SurpriseMealController> {
         leading: IconButton(
           // onPressed: () => Get.back(),
           onPressed: () {
-             /* ... Navigation logic ... */
-                  DashboardService.to.currentPage.value = 0;
-                  RootService.to.isOnHomePage.value = true;
-                  DashboardService.to.pageController.value.animateToPage(
-                    DashboardService.to.currentPage.value,
-                    duration: const Duration(milliseconds: 100),
-                    curve: Curves.linear,
-                  );
-                  DashboardService.to.currentPage.refresh();
-                  DashboardService.to.pageController.refresh();
-                  RootService.to.isOnHomePage.refresh();
+            /* ... Navigation logic ... */
+            DashboardService.to.currentPage.value = 0;
+            RootService.to.isOnHomePage.value = true;
+            DashboardService.to.pageController.value.animateToPage(
+              DashboardService.to.currentPage.value,
+              duration: const Duration(milliseconds: 100),
+              curve: Curves.linear,
+            );
+            DashboardService.to.currentPage.refresh();
+            DashboardService.to.pageController.refresh();
+            RootService.to.isOnHomePage.refresh();
           },
           icon: const Icon(Icons.arrow_back_ios, color: Colors.black),
         ),
@@ -67,6 +78,83 @@ class SurpriseMeal extends GetView<SurpriseMealController> {
             children: [
               // Meal Card
               _buildSurpriseMealCard(),
+
+              // --- REFRESH BUTTON DESIGN ---
+              Padding(
+                padding: const EdgeInsets.only(top: 8.0, right: 15.0),
+                child: Align(
+                  alignment: Alignment.centerRight,
+                  child: InkWell(
+                    onTap: () async {
+                      // 1. Physical Feedback
+                      HapticFeedback.mediumImpact();
+
+                      // 2. Logic: Date & Count Management
+                      final box = GetStorage();
+                      final todayStr =
+                          DateFormat('yyyy-MM-dd').format(DateTime.now());
+
+                      String? storedDate = box.read('surprise_refresh_date');
+                      int refreshCount =
+                          box.read('surprise_refresh_count') ?? 0;
+
+                      // Reset count if it's a new day
+                      if (storedDate != todayStr) {
+                        refreshCount = 0;
+                        box.write('surprise_refresh_date', todayStr);
+                        box.write('surprise_refresh_count', 0);
+                      }
+
+                      // 3. Limit Check (e.g., 2 times per day)
+                      if (false) {
+                        HapticFeedback.heavyImpact();
+                        Get.snackbar(
+                          "Limit Reached",
+                          "You can only refresh the meal 2 times a day.",
+                          snackPosition: SnackPosition.bottom,
+                          backgroundColor: Colors.orange.withOpacity(0.1),
+                          colorText: Colors.orange[800],
+                          duration: const Duration(seconds: 3),
+                        );
+                        return;
+                      }
+
+                      // 4. Execution: Trigger API calls
+                      await surpriseController.fetchSurpriseMeal(
+                          isRefresh: true);
+
+                      // 5. Increment stored count
+                      box.write('surprise_refresh_count', refreshCount + 1);
+                    },
+                    borderRadius: BorderRadius.circular(20),
+                    child: Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            Icons.refresh,
+                            size: 16,
+                            color:
+                                glDashboardPrimaryDarkColor, // Your custom theme color
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            "Refresh Meal",
+                            style: TextStyle(
+                              color: glDashboardPrimaryDarkColor,
+                              fontSize: 12,
+                              fontWeight: FontWeight.w600,
+                              decoration: TextDecoration.underline,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ).animate().fadeIn(
+                  delay: 200.ms), // Optional: Requires flutter_animate package
 
               const SizedBox(height: 24),
 
@@ -153,13 +241,23 @@ class SurpriseMeal extends GetView<SurpriseMealController> {
   }
 
   Widget _buildSurpriseMealCard() {
-    final recipe = controller.surpriseMeal.value!;
-
     // Hardcoded colors/icons for "Surprise Meal" style
     final Color mealColor = const Color(0xFFE3F2FD); // Light Blue
     final String mealIcon = "assets/icons/dish.svg";
 
+    // Accessing both controllers
+    final CalendarController calController = Get.find<CalendarController>();
+    final SurpriseMealController smController =
+        Get.find<SurpriseMealController>();
+
     return Obx(() {
+      // PREVENT RED ERROR SCREEN: Check if data is null before accessing
+      if (smController.surpriseMeal.value == null) {
+        return const SizedBox.shrink();
+      }
+
+      final recipe = smController.surpriseMeal.value!;
+
       return Card(
         color: Colors.white,
         margin: EdgeInsets.zero,
@@ -250,24 +348,89 @@ class SurpriseMeal extends GetView<SurpriseMealController> {
                             fontSize: 10, color: Colors.black54)),
                   ),
                 ),
+                Positioned(
+                  bottom: 5,
+                  right: 12,
+                  // ADD OBX HERE
+                  child: Obx(() {
+                    // Access the value inside Obx so GetX knows to listen to it
+                    bool isFav = calController.isSMFavourite.value;
+
+                    return GestureDetector(
+                      onTap: () async {
+                        bool originalState = calController.isSMFavourite.value;
+                        bool newState = !originalState;
+
+                        // Optimistic Update
+                        calController.isSMFavourite.value = newState;
+
+                        bool success = false;
+                        if (newState) {
+                          success = await calController
+                              .addSurpriseMealToFavouriteOptimistic(
+                                  "surprise_meal");
+                        } else {
+                          success = await calController
+                              .removeSurpriseMealFromFavouriteOptimistic(
+                                  "surprise_meal");
+                        }
+
+                        if (!success) {
+                          calController.isSMFavourite.value = originalState;
+                          Get.snackbar(
+                              "Error", "Could not update favorite status");
+                        }
+                      },
+                      child: AnimatedContainer(
+                        duration: const Duration(milliseconds: 250),
+                        padding: const EdgeInsets.all(8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: isFav
+                                  ? Colors.red.withOpacity(0.35)
+                                  : Colors.black.withOpacity(0.1),
+                              blurRadius: isFav ? 12 : 6,
+                              offset: const Offset(0, 3),
+                            ),
+                          ],
+                        ),
+                        child: AnimatedScale(
+                          scale: isFav ? 1.15 : 1.0,
+                          duration: const Duration(milliseconds: 200),
+                          curve: Curves.easeOutBack,
+                          child: Icon(
+                            isFav ? Icons.favorite : Icons.favorite_border,
+                            color: isFav
+                                ? const Color(0xFFE91E63)
+                                : const Color(0xFF9E9E9E),
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    );
+                  }),
+                ),
               ],
             ),
 
-            // Expansion Logic
+            // Expansion Logic using SurpriseMealController
             Padding(
               padding: const EdgeInsets.all(8.0),
               child: Column(
                 children: [
                   const Divider(height: 1),
                   InkWell(
-                    onTap: controller.toggleExpansion,
+                    onTap: smController.toggleExpansion,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(vertical: 8.0),
                       child: Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Text(
-                            controller.isCardExpanded.value
+                            smController.isCardExpanded.value
                                 ? "Hide Recipe"
                                 : "Show Recipe",
                             style: TextStyle(
@@ -277,7 +440,7 @@ class SurpriseMeal extends GetView<SurpriseMealController> {
                           ),
                           const SizedBox(width: 6),
                           Icon(
-                            controller.isCardExpanded.value
+                            smController.isCardExpanded.value
                                 ? Icons.expand_less
                                 : Icons.expand_more,
                             color: glAccentColor,
@@ -299,7 +462,7 @@ class SurpriseMeal extends GetView<SurpriseMealController> {
                             height: 1.5),
                       ),
                     ),
-                    crossFadeState: controller.isCardExpanded.value
+                    crossFadeState: smController.isCardExpanded.value
                         ? CrossFadeState.showSecond
                         : CrossFadeState.showFirst,
                     duration: const Duration(milliseconds: 300),
